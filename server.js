@@ -32,11 +32,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/chatapp')
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/chatapp';
+console.log('[SERVER] Connecting to MongoDB with URI:', MONGODB_URI);
+
+mongoose.connect(MONGODB_URI)
   .then(() => console.log('[SERVER] Connected to MongoDB'))
   .catch(err => console.error('[SERVER] MongoDB connection error:', err));
 
-// User Schema
+  // User Schema
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -56,7 +59,7 @@ const Message = mongoose.model('Message', messageSchema);
 
 // Chat Schema (to track active chats)
 const chatSchema = new mongoose.Schema({
-  users: [{ type: String, required: true }],
+  users: [{ type: String, required: true }],  
   lastMessage: { type: Date, default: Date.now },
 });
 const Chat = mongoose.model('Chat', chatSchema);
