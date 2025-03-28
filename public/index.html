@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Background image styles for default page */
+    .bg-image-eiffel {
+      background-image: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .bg-image-liberty {
+      background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .bg-image-taj {
+      background-image: url('https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .bg-image-colosseum {
+      background-image: url('https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .bg-image-sydney {
+      background-image: url('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    /* Overlay for default page background images */
+    .bg-image-eiffel::before,
+    .bg-image-liberty::before,
+    .bg-image-taj::before,
+    .bg-image-colosseum::before,
+    .bg-image-sydney::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+    /* Ensure content is above the overlay */
+    .bg-image-eiffel > *,
+    .bg-image-liberty > *,
+    .bg-image-taj > *,
+    .bg-image-colosseum > *,
+    .bg-image-sydney > * {
+      position: relative;
+      z-index: 1;
+    }
+    /* Preview thumbnail styles */
+    .bg-preview {
+      width: 80px;
+      height: 50px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .bg-preview:hover {
+      border-color: #3b82f6;
+    }
+    .bg-preview.selected {
+      border-color: #3b82f6;
+    }
+    /* Header button styles */
+    .header-btn {
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+    .header-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
+    }
+    /* Message styling */
+    .message {
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+      animation: fadeIn 0.3s ease-in;
+    }
+    .message.outgoing {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .message.incoming {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+    .message-content {
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .message.outgoing .message-content {
+      background-color: #3b82f6;
+      color: white;
+      border-bottom-right-radius: 0.25rem;
+    }
+    .message.incoming .message-content {
+      background-color: #e5e7eb;
+      color: black;
+      border-bottom-left-radius: 0.25rem;
+    }
+    .message.outgoing .message-content::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -0.5rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: #3b82f6;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+    .message.incoming .message-content::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -0.5rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      background-color: #e5e7eb;
+      clip-path: polygon(0 100%, 100% 0, 100% 100%);
+    }
+    .message-timestamp {
+      font-size: 0.65rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+    .message.outgoing .message-timestamp {
+      text-align: right;
+    }
+    .message.incoming .message-timestamp {
+      text-align: left;
+    }
+    .message img,
+    .message video {
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin-top: 0.5rem;
+    }
+    .message audio {
+      width: 100%;
+      margin-top: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .message.grouped {
+      margin-top: 0.1rem;
+    }
+    .message.grouped .message-content {
+      border-top-left-radius: 0.25rem;
+      border-top-right-radius: 0.25rem;
+    }
+    .message.outgoing.grouped .message-content {
+      border-bottom-right-radius: 1rem;
+    }
+    .message.incoming.grouped .message-content {
+      border-bottom-left-radius: 1rem;
+    }
+    .message:not(.grouped) {
+      margin-top: 1rem;
+    }
+    /* Full-screen chat styling */
+    .chat-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+      border-radius: 0;
+      margin: 0;
+      background: transparent !important; /* Remove white background in full-screen */
+    }
+    /* Messages container in full-screen */
+    .chat-fullscreen #messages {
+      background: transparent !important; /* Remove gray background in full-screen */
+      border: none !important; /* Remove border for a cleaner look */
+    }
+    /* Chat background styles */
+    .chat-bg-eiffel {
+      background-image: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .chat-bg-liberty {
+      background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .chat-bg-taj {
+      background-image: url('https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .chat-bg-colosseum {
+      background-image: url('https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .chat-bg-sydney {
+      background-image: url('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    /* Blur and overlay for chat background */
+    .chat-background::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+    }
+    .chat-background > * {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+  <div class="flex flex-col items-center w-full h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white w-full flex justify-between items-center px-6 py-4 shadow-lg">
+      <h1 class="text-3xl font-bold tracking-tight">Chat App</h1>
+      <div class="flex items-center gap-6">
+        <div id="user-greeting" class="text-lg font-medium">Hello, <span id="username">Username</span>!</div>
+        <!-- Settings Button -->
+        <div class="relative">
+          <button id="settings-button" class="header-btn p-2 rounded-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </button>
+          <div id="settings-menu" class="absolute right-0 mt-2 w-96 bg-white text-black rounded-md shadow-lg hidden p-4">
+            <div class="text-lg font-semibold mb-2">Background Settings</div>
+            <!-- Gradients -->
+            <div class="mb-4">
+              <div class="text-sm font-semibold mb-2">Gradients</div>
+              <div class="grid grid-cols-3 gap-2">
+                <div id="bg-gradient-1" class="bg-preview bg-gradient-to-br from-blue-200 via-purple-200 to-pink-200" data-bg="gradient-1"></div>
+                <div id="bg-gradient-2" class="bg-preview bg-gradient-to-br from-green-200 via-teal-200 to-blue-200" data-bg="gradient-2"></div>
+                <div id="bg-gradient-3" class="bg-preview bg-gradient-to-br from-red-200 via-orange-200 to-yellow-200" data-bg="gradient-3"></div>
+                <div id="bg-gradient-4" class="bg-preview bg-gradient-to-br from-purple-200 via-pink-200 to-indigo-200" data-bg="gradient-4"></div>
+                <div id="bg-gradient-5" class="bg-preview bg-gradient-to-br from-teal-200 via-cyan-200 to-lime-200" data-bg="gradient-5"></div>
+              </div>
+            </div>
+            <!-- Solid Colors -->
+            <div class="mb-4">
+              <div class="text-sm font-semibold mb-2">Solid Colors</div>
+              <div class="grid grid-cols-3 gap-2">
+                <div id="bg-solid-1" class="bg-preview bg-teal-100" data-bg="solid-1"></div>
+                <div id="bg-solid-2" class="bg-preview bg-indigo-100" data-bg="solid-2"></div>
+                <div id="bg-solid-3" class="bg-preview bg-pink-100" data-bg="solid-3"></div>
+                <div id="bg-solid-4" class="bg-preview bg-yellow-100" data-bg="solid-4"></div>
+                <div id="bg-solid-5" class="bg-preview bg-gray-100" data-bg="solid-5"></div>
+              </div>
+            </div>
+            <!-- Landmark Photos -->
+            <div>
+              <div class="text-sm font-semibold mb-2">Landmark Photos</div>
+              <div class="grid grid-cols-3 gap-2">
+                <div id="bg-image-eiffel" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-bg="image-eiffel"></div>
+                <div id="bg-image-liberty" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-bg="image-liberty"></div>
+                <div id="bg-image-taj" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-bg="image-taj"></div>
+                <div id="bg-image-colosseum" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-bg="image-colosseum"></div>
+                <div id="bg-image-sydney" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-bg="image-sydney"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Logout Button -->
+        <a href="/logout" class="header-btn p-2 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- My Chats Section -->
+    <div id="my-chats-section" class="bg-white bg-opacity-90 shadow-md rounded-md p-4 w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 my-4">
+      <h2 class="text-xl font-semibold mb-3">My Chats</h2>
+      <div id="my-chats-list" class="flex flex-col gap-3">
+        <p class="text-gray-500">No active chats yet.</p>
+      </div>
+    </div>
+
+    <!-- Nearby Users Section -->
+    <div id="nearby-users-section" class="bg-white bg-opacity-90 shadow-md rounded-md p-4 w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 my-4">
+      <h2 class="text-xl font-semibold mb-3">Find Nearby Users</h2>
+      <div id="nearby-users-list" class="flex flex-col gap-3">
+        <p class="text-gray-500">No users nearby at the moment.</p>
+      </div>
+      <button id="find-users-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 w-full">
+        Find Users
+      </button>
+    </div>
+
+    <!-- Notification Section -->
+    <div id="notification-section" class="bg-white bg-opacity-90 shadow-md rounded-md p-4 w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 hidden">
+      <p id="notification-text" class="text-lg"></p>
+      <div class="flex justify-between mt-4">
+        <button id="accept-request" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          Accept
+        </button>
+        <button id="deny-request" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+          Deny
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div id="chat-section" class="bg-white bg-opacity-90 shadow-md rounded-md p-4 flex flex-col w-11/12 sm:w-4/5 md:w-3/5 lg:w-2/5 h-full hidden">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-xl font-semibold" id="chat-with">Chat</h2>
+        <div class="flex gap-2">
+          <!-- Chat Background Settings (visible in full-screen mode) -->
+          <div class="relative">
+            <button id="chat-bg-settings-button" class="bg-gray-200 hover:bg-gray-300 text-black font-bold py-1 px-3 rounded hidden">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4-4m0 0l4 4m-4-4v8m8-12h-4m4 0h-4m4 0v8"></path>
+              </svg>
+            </button>
+            <div id="chat-bg-settings-menu" class="absolute right-0 mt-2 w-64 bg-white text-black rounded-md shadow-lg hidden p-4 z-50">
+              <div class="text-lg font-semibold mb-2">Chat Background</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div id="chat-bg-eiffel" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-chat-bg="eiffel"></div>
+                <div id="chat-bg-liberty" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-chat-bg="liberty"></div>
+                <div id="chat-bg-taj" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1564507592333-c60657eea523?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-chat-bg="taj"></div>
+                <div id="chat-bg-colosseum" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-chat-bg="colosseum"></div>
+                <div id="chat-bg-sydney" class="bg-preview" style="background-image: url('https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');" data-chat-bg="sydney"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Full-Screen Toggle -->
+          <button id="fullscreen-toggle" class="bg-gray-200 hover:bg-gray-300 text-black font-bold py-1 px-3 rounded">
+            <svg id="fullscreen-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path>
+            </svg>
+          </button>
+          <!-- Back Button -->
+          <button id="back-to-sections" class="bg-gray-200 hover:bg-gray-300 text-black font-bold py-1 px-3 rounded">
+            ← Back
+          </button>
+        </div>
+      </div>
+      <div id="messages" class="flex-1 overflow-y-auto p-2 border rounded-md bg-gray-50 flex flex-col"></div>
+      <div class="flex mt-4 gap-2">
+        <input id="message-input" type="text" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-md px-3 py-2">
+        <input id="media-input" type="file" accept="image/*,video/*" class="hidden">
+        <button id="media-button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded flex items-center">
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7-8v8"></path>
+          </svg>
+          Media
+        </button>
+        <button id="record-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded flex items-center">
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+          </svg>
+          <span id="record-text">Voice</span>
+        </button>
+        <button id="send-message-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Check if token exists, redirect to login if not
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/logout';
+    }
+
+    const socket = io();
+    const myChatsList = document.getElementById('my-chats-list');
+    const nearbyUsersList = document.getElementById('nearby-users-list');
+    const findUsersButton = document.getElementById('find-users-button');
+    const notificationSection = document.getElementById('notification-section');
+    const notificationText = document.getElementById('notification-text');
+    const acceptRequestButton = document.getElementById('accept-request');
+    const denyRequestButton = document.getElementById('deny-request');
+    const chatSection = document.getElementById('chat-section');
+    const backToSections = document.getElementById('back-to-sections');
+    const chatWith = document.getElementById('chat-with');
+    const messages = document.getElementById('messages');
+    const messageInput = document.getElementById('message-input');
+    const sendMessageButton = document.getElementById('send-message-button');
+    const mediaInput = document.getElementById('media-input');
+    const mediaButton = document.getElementById('media-button');
+    const recordButton = document.getElementById('record-button');
+    const recordText = document.getElementById('record-text');
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    const fullscreenIcon = document.getElementById('fullscreen-icon');
+    const chatBgSettingsButton = document.getElementById('chat-bg-settings-button');
+    const chatBgSettingsMenu = document.getElementById('chat-bg-settings-menu');
+
+    // Background Customization Elements
+    const settingsButton = document.getElementById('settings-button');
+    const settingsMenu = document.getElementById('settings-menu');
+
+    let connectedUser = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let lastMessageSender = null;
+    let isFullscreen = false;
+
+    // Full-Screen Toggle Logic
+    fullscreenToggle.addEventListener('click', () => {
+      isFullscreen = !isFullscreen;
+      if (isFullscreen) {
+        chatSection.classList.add('chat-fullscreen');
+        fullscreenIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+        chatBgSettingsButton.classList.remove('hidden');
+        // Apply the saved chat background when entering full-screen mode
+        const savedChatBackground = localStorage.getItem('chatBackground') || 'eiffel';
+        setChatBackground(savedChatBackground);
+      } else {
+        chatSection.classList.remove('chat-fullscreen');
+        chatSection.classList.remove('chat-background');
+        chatSection.classList.remove('chat-bg-eiffel', 'chat-bg-liberty', 'chat-bg-taj', 'chat-bg-colosseum', 'chat-bg-sydney');
+        fullscreenIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path>';
+        chatBgSettingsButton.classList.add('hidden');
+        chatBgSettingsMenu.classList.add('hidden');
+      }
+    });
+
+    // Chat Background Customization Logic
+    function setChatBackground(bgType) {
+      console.log('[CLIENT] Setting chat background to:', bgType);
+      chatSection.classList.remove('chat-bg-eiffel', 'chat-bg-liberty', 'chat-bg-taj', 'chat-bg-colosseum', 'chat-bg-sydney');
+      chatSection.classList.add('chat-background');
+      switch (bgType) {
+        case 'eiffel':
+          chatSection.classList.add('chat-bg-eiffel');
+          document.getElementById('chat-bg-eiffel').classList.add('selected');
+          break;
+        case 'liberty':
+          chatSection.classList.add('chat-bg-liberty');
+          document.getElementById('chat-bg-liberty').classList.add('selected');
+          break;
+        case 'taj':
+          chatSection.classList.add('chat-bg-taj');
+          document.getElementById('chat-bg-taj').classList.add('selected');
+          break;
+        case 'colosseum':
+          chatSection.classList.add('chat-bg-colosseum');
+          document.getElementById('chat-bg-colosseum').classList.add('selected');
+          break;
+        case 'sydney':
+          chatSection.classList.add('chat-bg-sydney');
+          document.getElementById('chat-bg-sydney').classList.add('selected');
+          break;
+        default:
+          console.error('[CLIENT] Invalid chat background type:', bgType);
+          return;
+      }
+      // Remove 'selected' class from other previews
+      document.querySelectorAll('[data-chat-bg]').forEach(p => {
+        if (p.getAttribute('data-chat-bg') !== bgType) {
+          p.classList.remove('selected');
+        }
+      });
+      localStorage.setItem('chatBackground', bgType);
+      console.log('[CLIENT] Chat background classes after update:', chatSection.classList);
+    }
+
+    // Chat Background Selection Logic
+    chatBgSettingsButton.addEventListener('click', () => {
+      console.log('[CLIENT] Chat background settings button clicked');
+      chatBgSettingsMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!chatBgSettingsButton.contains(e.target) && !chatBgSettingsMenu.contains(e.target)) {
+        chatBgSettingsMenu.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('[data-chat-bg]').forEach(preview => {
+      preview.addEventListener('click', () => {
+        const bgType = preview.getAttribute('data-chat-bg');
+        console.log('[CLIENT] Chat background selected:', bgType);
+        setChatBackground(bgType);
+      });
+    });
+
+    // Default Page Background Customization Logic
+    function setBackground(bgType) {
+      document.body.classList.remove(
+        'bg-gradient-to-br', 'from-blue-200', 'via-purple-200', 'to-pink-200',
+        'from-green-200', 'via-teal-200', 'to-blue-200',
+        'from-red-200', 'via-orange-200', 'to-yellow-200',
+        'from-purple-200', 'via-pink-200', 'to-indigo-200',
+        'from-teal-200', 'via-cyan-200', 'to-lime-200',
+        'bg-teal-100', 'bg-indigo-100', 'bg-pink-100', 'bg-yellow-100', 'bg-gray-100',
+        'bg-image-eiffel', 'bg-image-liberty', 'bg-image-taj', 'bg-image-colosseum', 'bg-image-sydney'
+      );
+
+      document.querySelectorAll('.bg-preview').forEach(preview => {
+        preview.classList.remove('selected');
+      });
+
+      switch (bgType) {
+        case 'gradient-1':
+          document.body.classList.add('bg-gradient-to-br', 'from-blue-200', 'via-purple-200', 'to-pink-200');
+          document.getElementById('bg-gradient-1').classList.add('selected');
+          break;
+        case 'gradient-2':
+          document.body.classList.add('bg-gradient-to-br', 'from-green-200', 'via-teal-200', 'to-blue-200');
+          document.getElementById('bg-gradient-2').classList.add('selected');
+          break;
+        case 'gradient-3':
+          document.body.classList.add('bg-gradient-to-br', 'from-red-200', 'via-orange-200', 'to-yellow-200');
+          document.getElementById('bg-gradient-3').classList.add('selected');
+          break;
+        case 'gradient-4':
+          document.body.classList.add('bg-gradient-to-br', 'from-purple-200', 'via-pink-200', 'to-indigo-200');
+          document.getElementById('bg-gradient-4').classList.add('selected');
+          break;
+        case 'gradient-5':
+          document.body.classList.add('bg-gradient-to-br', 'from-teal-200', 'via-cyan-200', 'to-lime-200');
+          document.getElementById('bg-gradient-5').classList.add('selected');
+          break;
+        case 'solid-1':
+          document.body.classList.add('bg-teal-100');
+          document.getElementById('bg-solid-1').classList.add('selected');
+          break;
+        case 'solid-2':
+          document.body.classList.add('bg-indigo-100');
+          document.getElementById('bg-solid-2').classList.add('selected');
+          break;
+        case 'solid-3':
+          document.body.classList.add('bg-pink-100');
+          document.getElementById('bg-solid-3').classList.add('selected');
+          break;
+        case 'solid-4':
+          document.body.classList.add('bg-yellow-100');
+          document.getElementById('bg-solid-4').classList.add('selected');
+          break;
+        case 'solid-5':
+          document.body.classList.add('bg-gray-100');
+          document.getElementById('bg-solid-5').classList.add('selected');
+          break;
+        case 'image-eiffel':
+          document.body.classList.add('bg-image-eiffel');
+          document.getElementById('bg-image-eiffel').classList.add('selected');
+          break;
+        case 'image-liberty':
+          document.body.classList.add('bg-image-liberty');
+          document.getElementById('bg-image-liberty').classList.add('selected');
+          break;
+        case 'image-taj':
+          document.body.classList.add('bg-image-taj');
+          document.getElementById('bg-image-taj').classList.add('selected');
+          break;
+        case 'image-colosseum':
+          document.body.classList.add('bg-image-colosseum');
+          document.getElementById('bg-image-colosseum').classList.add('selected');
+          break;
+        case 'image-sydney':
+          document.body.classList.add('bg-image-sydney');
+          document.getElementById('bg-image-sydney').classList.add('selected');
+          break;
+      }
+
+      localStorage.setItem('background', bgType);
+    }
+
+    const savedBackground = localStorage.getItem('background') || 'gradient-1';
+    setBackground(savedBackground);
+
+    settingsButton.addEventListener('click', () => {
+      settingsMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!settingsButton.contains(e.target) && !settingsMenu.contains(e.target)) {
+        settingsMenu.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('.bg-preview').forEach(preview => {
+      preview.addEventListener('click', () => {
+        const bgType = preview.getAttribute('data-bg');
+        setBackground(bgType);
+      });
+    });
+
+    // Update user location
+    function updateUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const response = await fetch('/api/update-location', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ location: [longitude, latitude] })
+              });
+              if (response.ok) {
+                console.log('[CLIENT] Location updated:', [longitude, latitude]);
+              } else {
+                console.error('[CLIENT] Error updating location:', await response.json());
+              }
+            } catch (error) {
+              console.error('[CLIENT] Error updating location:', error);
+            }
+          },
+          (error) => {
+            console.error('[CLIENT] Geolocation error:', error.message);
+          }
+        );
+      } else {
+        console.error('[CLIENT] Geolocation not supported by this browser');
+      }
+    }
+
+    // Load "My Chats" from the server on page load
+    async function loadMyChats() {
+      try {
+        const response = await fetch('/api/active-chats', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch active chats');
+        }
+        const activeChats = await response.json();
+        myChatsList.innerHTML = '';
+        if (activeChats.length === 0) {
+          myChatsList.innerHTML = '<p class="text-gray-500">No active chats yet.</p>';
+        } else {
+          activeChats.forEach(username => {
+            addToMyChats(username);
+          });
+        }
+      } catch (error) {
+        console.error('[CLIENT] Error loading active chats:', error);
+        if (error.message.includes('401')) {
+          window.location.href = '/logout';
+        }
+      }
+    }
+
+    // Add User to "My Chats" with a Remove Button
+    function addToMyChats(username) {
+      const chatElement = document.createElement('div');
+      chatElement.className = 'flex justify-between items-center bg-gray-100 border rounded p-2 hover:bg-gray-200';
+      
+      const usernameSpan = document.createElement('span');
+      usernameSpan.textContent = username;
+      usernameSpan.className = 'cursor-pointer flex-1';
+      usernameSpan.addEventListener('click', () => openChat(username));
+      
+      const removeButton = document.createElement('button');
+      removeButton.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+      removeButton.className = 'text-red-500 hover:text-red-700';
+      removeButton.addEventListener('click', () => removeChat(username));
+      
+      chatElement.appendChild(usernameSpan);
+      chatElement.appendChild(removeButton);
+      myChatsList.appendChild(chatElement);
+    }
+
+    // Remove a Chat
+    async function removeChat(username) {
+      if (confirm(`Are you sure you want to remove your chat with ${username}? This will delete all messages.`)) {
+        try {
+          const response = await fetch('/api/remove-chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ chatUsername: username })
+          });
+          if (!response.ok) {
+            throw new Error('Failed to remove chat');
+          }
+          const result = await response.json();
+          console.log('[CLIENT] Chat removed:', username);
+          loadMyChats();
+          if (connectedUser === username) {
+            chatSection.classList.add('hidden');
+            connectedUser = null;
+          }
+        } catch (error) {
+          console.error('[CLIENT] Error removing chat:', error);
+          if (error.message.includes('401')) {
+            window.location.href = '/logout';
+          }
+        }
+      }
+    }
+
+    // Fetch the logged-in user's username and load chats
+    async function initializeApp() {
+      try {
+        const response = await fetch('/api/userinfo', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+        const data = await response.json();
+        console.log('[CLIENT] Logged in as:', data.username);
+        document.getElementById('username').textContent = data.username;
+        socket.emit('register-user', data.username);
+        loadMyChats();
+        updateUserLocation();
+      } catch (error) {
+        console.error('[CLIENT] Error fetching username:', error);
+        window.location.href = '/logout';
+      }
+    }
+
+    initializeApp();
+
+    // Find Nearby Users
+    findUsersButton.addEventListener('click', async () => {
+      console.log('[CLIENT] Finding nearby users');
+      try {
+        const response = await fetch('/api/discover', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to discover users');
+        }
+        const users = await response.json();
+        console.log('[CLIENT] Discovered users:', users);
+        nearbyUsersList.innerHTML = '';
+        if (users.length > 0) {
+          users.forEach(user => {
+            const userElement = document.createElement('div');
+            userElement.textContent = user.username;
+            userElement.className = 'bg-gray-100 border rounded p-2 hover:bg-gray-200 cursor-pointer';
+            userElement.addEventListener('click', () => sendChatRequest(user.username));
+            nearbyUsersList.appendChild(userElement);
+          });
+        } else {
+          nearbyUsersList.innerHTML = '<p class="text-gray-500">No users nearby at the moment.</p>';
+        }
+      } catch (error) {
+        console.error('[CLIENT] Error discovering users:', error);
+        if (error.message.includes('401')) {
+          window.location.href = '/logout';
+        }
+      }
+    });
+
+    // Send Chat Request
+    function sendChatRequest(username) {
+      console.log('[CLIENT] Sending chat request to:', username);
+      socket.emit('chat-request', { to: username });
+    }
+
+    // Handle Incoming Chat Request
+    socket.on('chat-request', ({ from }) => {
+      console.log('[CLIENT] Chat request received from:', from);
+      notificationSection.classList.remove('hidden');
+      notificationText.textContent = `${from} wants to chat with you!`;
+      acceptRequestButton.onclick = () => {
+        console.log('[CLIENT] Accepting chat request from:', from);
+        socket.emit('chat-request-accepted', { from });
+        notificationSection.classList.add('hidden');
+        loadMyChats();
+        openChat(from);
+      };
+      denyRequestButton.onclick = () => {
+        console.log('[CLIENT] Denying chat request from:', from);
+        socket.emit('chat-request-denied', { to: from });
+        notificationSection.classList.add('hidden');
+      };
+    });
+
+    // Open Chat for Accepted Requests
+    socket.on('chat-accepted', ({ from }) => {
+      console.log('[CLIENT] Chat accepted with:', from);
+      loadMyChats();
+      openChat(from);
+    });
+
+    // Handle Denied Notification
+    socket.on('chat-request-denied', ({ from }) => {
+      console.log('[CLIENT] Chat request denied by:', from);
+      alert(`${from} denied your request to chat.`);
+    });
+
+    // Open Chat Section
+    async function openChat(username) {
+      console.log('[CLIENT] Opening chat with:', username);
+      connectedUser = username;
+      chatWith.textContent = `Chat with ${username}`;
+      chatSection.classList.remove('hidden');
+      messages.innerHTML = '';
+      lastMessageSender = null;
+      await renderMessages(username);
+      // Apply saved chat background if in full-screen mode
+      if (isFullscreen) {
+        const savedChatBackground = localStorage.getItem('chatBackground') || 'eiffel';
+        setChatBackground(savedChatBackground);
+        chatBgSettingsButton.classList.remove('hidden');
+      }
+    }
+
+    // Send Text Message
+    sendMessageButton.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message && connectedUser) {
+        console.log('[CLIENT] Sending message to:', connectedUser, 'Message:', message);
+        const messageObj = { type: 'outgoing', text: `You: ${message}`, messageType: 'text', timestamp: new Date().toISOString() };
+        addMessage(messageObj.text, messageObj.type, messageObj.messageType, null, messageObj.timestamp);
+        socket.emit('message', { to: connectedUser, message, type: 'text' });
+        messageInput.value = '';
+      }
+    });
+
+    // Send Media
+    mediaButton.addEventListener('click', () => {
+      mediaInput.click();
+    });
+
+    mediaInput.addEventListener('change', async () => {
+      const file = mediaInput.files[0];
+      if (file && connectedUser) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('receiver', connectedUser);
+
+        try {
+          const response = await fetch('/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const type = file.type.startsWith('image') ? 'image' : 'video';
+            const messageObj = { type: 'outgoing', text: `You: [${type}]`, messageType: type, data: data.fileUrl, timestamp: new Date().toISOString() };
+            addMessage(messageObj.text, messageObj.type, messageObj.messageType, messageObj.data, messageObj.timestamp);
+            mediaInput.value = '';
+          } else {
+            const errorData = await response.json();
+            console.error('[CLIENT] Error uploading media:', errorData.error);
+            alert('Failed to upload media. Please try again.');
+          }
+        } catch (error) {
+          console.error('[CLIENT] Error uploading media:', error);
+          alert('An error occurred while uploading media.');
+        }
+      }
+    });
+
+    // Voice Recording
+    recordButton.addEventListener('click', async () => {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('MediaRecorder API not supported in this browser');
+        }
+
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.start();
+          recordText.textContent = 'Stop';
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'voice-message.webm');
+            formData.append('receiver', connectedUser);
+
+            try {
+              const response = await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+              });
+              if (response.ok) {
+                const data = await response.json();
+                const messageObj = { type: 'outgoing', text: 'You: [Voice Message]', messageType: 'voice', data: data.fileUrl, timestamp: new Date().toISOString() };
+                addMessage(messageObj.text, messageObj.type, messageObj.messageType, messageObj.data, messageObj.timestamp);
+              } else {
+                const errorData = await response.json();
+                console.error('[CLIENT] Error uploading voice message:', errorData.error);
+                alert('Failed to upload voice message. Please try again.');
+              }
+            } catch (error) {
+              console.error('[CLIENT] Error uploading voice message:', error);
+              alert('An error occurred while uploading voice message.');
+            }
+          };
+        } else {
+          mediaRecorder.stop();
+          recordText.textContent = 'Voice';
+        }
+      } catch (error) {
+        console.error('[CLIENT] Error with voice recording:', error);
+        alert('Voice recording is not supported or an error occurred.');
+      }
+    });
+
+    // Receive Message
+    socket.on('message', ({ from, message, type }) => {
+      console.log('[CLIENT] Message received from:', from, 'Message:', message, 'Type:', type);
+      console.log('[CLIENT] Current connectedUser:', connectedUser);
+      if (connectedUser && from === connectedUser) {
+        const messageObj = {
+          type: 'incoming',
+          text: `${from}: ${type === 'text' ? message : `[${type}]`}`,
+          messageType: type,
+          data: type !== 'text' ? message : null,
+          timestamp: new Date().toISOString()
+        };
+        console.log('[CLIENT] Rendering message from:', from);
+        addMessage(messageObj.text, messageObj.type, messageObj.messageType, messageObj.data, messageObj.timestamp);
+      } else {
+        console.log('[CLIENT] Message received but chat not open for:', from);
+      }
+    });
+
+    // Render Chat Messages from Server
+    async function renderMessages(username) {
+      console.log('[CLIENT] Fetching messages for:', username);
+      try {
+        const response = await fetch(`/api/chat-history/${username}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch chat history');
+        }
+        const chatHistory = await response.json();
+        console.log('[CLIENT] Chat history:', chatHistory);
+        messages.innerHTML = '';
+        lastMessageSender = null;
+        chatHistory.forEach(msg => {
+          const messageObj = {
+            type: msg.from === document.getElementById('username').textContent ? 'outgoing' : 'incoming',
+            text: `${msg.from === document.getElementById('username').textContent ? 'You' : msg.from}: ${msg.type === 'text' ? msg.message : `[${msg.type}]`}`,
+            messageType: msg.type,
+            data: msg.type !== 'text' ? msg.message : null,
+            timestamp: msg.timestamp
+          };
+          addMessage(messageObj.text, messageObj.type, messageObj.messageType, messageObj.data, messageObj.timestamp);
+        });
+      } catch (error) {
+        console.error('[CLIENT] Error fetching chat history:', error);
+        if (error.message.includes('401')) {
+          window.location.href = '/logout';
+        }
+      }
+    }
+
+    // Add Message to Chat
+    function addMessage(text, type, messageType, data = null, timestamp) {
+      console.log('[CLIENT] Adding message:', text, 'Type:', type, 'MessageType:', messageType);
+      const sender = text.split(':')[0];
+      const isGrouped = lastMessageSender === sender;
+      lastMessageSender = sender;
+
+      const messageElement = document.createElement('div');
+      messageElement.className = `message ${type} ${isGrouped ? 'grouped' : ''}`;
+
+      const contentElement = document.createElement('div');
+      contentElement.className = 'message-content';
+
+      if (messageType === 'text') {
+        contentElement.textContent = text;
+      } else if (messageType === 'image') {
+        const img = document.createElement('img');
+        img.src = data;
+        img.className = 'max-w-xs';
+        contentElement.appendChild(img);
+      } else if (messageType === 'video') {
+        const video = document.createElement('video');
+        video.src = data;
+        video.controls = true;
+        video.className = 'max-w-xs';
+        contentElement.appendChild(video);
+      } else if (messageType === 'voice') {
+        const audio = document.createElement('audio');
+        audio.src = data;
+        audio.controls = true;
+        contentElement.appendChild(audio);
+      }
+
+      const timestampElement = document.createElement('div');
+      timestampElement.className = 'message-timestamp';
+      timestampElement.textContent = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      messageElement.appendChild(contentElement);
+      messageElement.appendChild(timestampElement);
+      messages.appendChild(messageElement);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Back to Main Sections
+    backToSections.addEventListener('click', () => {
+      console.log('[CLIENT] Closing chat section');
+      connectedUser = null;
+      chatSection.classList.add('hidden');
+      isFullscreen = false;
+      chatSection.classList.remove('chat-fullscreen');
+      chatSection.classList.remove('chat-background');
+      chatSection.classList.remove('chat-bg-eiffel', 'chat-bg-liberty', 'chat-bg-taj', 'chat-bg-colosseum', 'chat-bg-sydney');
+      fullscreenIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path>';
+      chatBgSettingsButton.classList.add('hidden');
+      chatBgSettingsMenu.classList.add('hidden');
+    });
+  </script>
+</body>
+</html> 
