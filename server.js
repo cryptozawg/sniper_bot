@@ -37,7 +37,7 @@ console.log('[SERVER] Connecting to MongoDB with URI:', MONGODB_URI);
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('[SERVER] Connected to MongoDB'))
-  .catch(err => console.error('[SERVER] MongoDB connection error:', err));
+  .catch(err => console.error('[SERVER] MongoDB connection error:', err)); 
 
   // User Schema
 const userSchema = new mongoose.Schema({
