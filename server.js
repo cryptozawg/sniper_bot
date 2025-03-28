@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Message Schema
+// Message Schema 
 const messageSchema = new mongoose.Schema({
   from: { type: String, required: true },
   to: { type: String, required: true },
